@@ -1,32 +1,38 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const displaySize = { width: video.width, height: video.height };
-    
-    await faceapi.nets.tinyFaceDetector.loadFromUri('models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('models');
-    await faceapi.nets.faceExpressionNet.loadFromUri('models');
-    
-    navigator.getUserMedia(
-        { video: {} },
-        stream => video.srcObject = stream,
-        err => console.error(err)
-    );
-    
-    video.addEventListener('play', () => {
-        const canvasDisplaySize = { width: video.width, height: video.height };
-        faceapi.matchDimensions(canvas, canvasDisplaySize);
-        
+$(document).ready(function () {
+    // Check for webcam support
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        initializeWebcam();
+    } else {
+        alert('Webcam not supported on this browser');
+    }
+});
+
+async function initializeWebcam() {
+    const video = document.getElementById('webcam');
+    const outputCanvas = document.getElementById('outputCanvas');
+
+    // Get user media from webcam
+    const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+    video.srcObject = stream;
+
+    // Load the face-api.js models
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+
+    // Detect faces in real-time
+    video.addEventListener('play', async () => {
+        const displaySize = { width: video.width, height: video.height };
+        faceapi.matchDimensions(outputCanvas, displaySize);
+
         setInterval(async () => {
-            const detections = await faceapi.detectAllFaces(video,
-                new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors().withFaceExpressions();
-            
-            const resizedDetections = faceapi.resizeResults(detections, canvasDisplaySize);
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            faceapi.draw.drawDetections(canvas, resizedDetections);
-            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-            faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .withFaceDescriptors();
+
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            faceapi.draw.drawDetections(outputCanvas, resizedDetections);
+            faceapi.draw.drawFaceLandmarks(outputCanvas, resizedDetections);
         }, 100);
     });
-});
+}
