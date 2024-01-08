@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection Website</title>
     <link rel="stylesheet" href="styles.css">
-    <title>Face Recognition Webpage</title>
 </head>
 <body>
     <div class="container">
-        <video id="video" width="640" height="480" autoplay></video>
-        <canvas id="canvas" width="640" height="480"></canvas>
+        <h1>Face Detection</h1>
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="outputCanvas" width="500" height="400"></canvas>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
