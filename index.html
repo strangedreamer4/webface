@@ -1,21 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Detection Website</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Capture and Transmission</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Face Detection</h1>
-        <video id="webcam" autoplay playsinline muted></video>
-        <canvas id="outputCanvas" width="500" height="400"></canvas>
-    </div>
+  <video id="video" width="640" height="480" autoplay></video>
+  <button id="startButton">Start Recording</button>
+  <button id="stopButton" style="display: none;">Stop Recording</button>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const videoElement = document.getElementById('video');
+      const startButton = document.getElementById('startButton');
+      const stopButton = document.getElementById('stopButton');
 
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-    <script src="script.js"></script>
+      // Initialize socket.io connection
+      const socket = io();
+
+      // Get user media and stream video
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          videoElement.srcObject = stream;
+
+          // Start capturing and transmitting video data
+          let isRecording = false;
+          let mediaRecorder;
+
+          startButton.addEventListener('click', () => {
+            if (!isRecording) {
+              mediaRecorder = new MediaRecorder(stream);
+              const chunks = [];
+
+              mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                  chunks.push(event.data);
+                }
+              };
+
+              mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                  const base64data = reader.result.split(',')[1];
+                  socket.emit('videoData', { type: 'video', data: base64data });
+                };
+
+                reader.readAsDataURL(blob);
+              };
+
+              mediaRecorder.start();
+              isRecording = true;
+
+              startButton.style.display = 'none';
+              stopButton.style.display = 'inline-block';
+            }
+          });
+
+          stopButton.addEventListener('click', () => {
+            if (isRecording) {
+              mediaRecorder.stop();
+              isRecording = false;
+
+              startButton.style.display = 'inline-block';
+              stopButton.style.display = 'none';
+            }
+          });
+        })
+        .catch((error) => {
+          console.error('Error accessing camera:', error);
+        });
+    });
+  </script>
 </body>
 </html>
