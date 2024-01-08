@@ -33,6 +33,23 @@ async function initializeWebcam() {
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
             faceapi.draw.drawDetections(outputCanvas, resizedDetections);
             faceapi.draw.drawFaceLandmarks(outputCanvas, resizedDetections);
+
+            // Check if at least one face is detected
+            if (detections.length > 0) {
+                // Execute your specific action when a face is detected
+                handleFaceDetected();
+            }
         }, 100);
     });
+}
+
+function handleFaceDetected() {
+    // Replace this with your specific logic
+    console.log('Face detected! You can execute your action here.');
+    // Example: Display a message
+    alert('Face detected!');
+    // Example: Play a sound
+    // playSound();
+    // Example: Change the background color
+    // document.body.style.backgroundColor = 'lightgreen';
 }
